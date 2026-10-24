@@ -10,6 +10,7 @@ nav:
       - Running SIPNET: user-guide/running-sipnet.md
       - Model Inputs: user-guide/model-inputs.md
       - Model Outputs: user-guide/model-outputs.md
+      - Running in the Browser (WebAssembly): web-assembly.md
   - Developer Guide:
       - Code Structure: developer-guide/code-structure.md
       - Adding New Command Line Options: developer-guide/cli-options.md
