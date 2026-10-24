@@ -95,6 +95,14 @@ $(WASM_JS): $(COMMON_CFILES) $(SIPNET_CFILES) $(wildcard src/common/*.h src/sipn
 wasm-clean:
 	rm -f $(WASM_DIR)/sipnet.mjs $(WASM_DIR)/sipnet.wasm
 
+# Run the smoke tests through the wasm build (needs node)
+wasm-smoke: wasm
+	node tests/wasm/run_smoke_wasm.mjs $(WASM_DIR)
+
+# Benchmark native vs. wasm on the smoke-test configurations (needs node)
+wasm-bench: wasm sipnet
+	node tests/wasm/bench.mjs --markdown
+
 clean:
 	rm -f $(SIPNET_OFILES) $(COMMON_OFILES)
 	rm -f $(COMMON_LIB) $(SIPNET_LIB)
@@ -130,7 +138,7 @@ cleanall: clean testclean
 
 .PHONY: all clean help document exec cleanall \
 		test testbuild $(SIPNET_TEST_DIRS) $(SIPNET_TEST_DIRS_RUN) testclean $(SIPNET_TEST_DIRS_CLEAN) testrun smoke unit \
-		wasm wasm-clean
+		wasm wasm-clean wasm-smoke wasm-bench
 
 help:
 	@echo "Available make targets:"
@@ -145,6 +153,8 @@ help:
 	@echo "  === WebAssembly (requires emcc; see docs/web-assembly.md) ==="
 	@echo "  wasm         - Build web/sipnet.mjs + web/sipnet.wasm with Emscripten"
 	@echo "  wasm-clean   - Remove the WebAssembly build outputs"
+	@echo "  wasm-smoke   - Run the smoke tests against the WebAssembly build (needs node)"
+	@echo "  wasm-bench   - Benchmark native vs. WebAssembly builds (needs node)"
 	@echo "  === Tests ==="
 	@echo "  test         - Build + run unit tests, then smoke tests"
 	@echo "  testbuild    - Build the unit tests (does not run)"
