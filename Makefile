@@ -72,6 +72,29 @@ info:
 sipnet: info $(SIPNET_OFILES) $(COMMON_LIB)
 	$(LD) $(LDFLAGS) -o sipnet $(SIPNET_OFILES) $(LIBLINKS) $(SIPNET_LIBS)
 
+# WEBASSEMBLY BUILD
+# Requires the Emscripten SDK (emcc on PATH); see docs/web-assembly.md
+EMCC ?= emcc
+WASM_DIR ?= web
+WASM_CFLAGS=-O3 -Wall -Werror -Isrc -Wno-c2x-extensions -DGIT_HASH='$(GIT_HASH)'
+# MODULARIZE + EXPORT_ES6: emit an ES module exporting a factory, createSipnet()
+# INVOKE_RUN=0: don't run main() on load; callers use callMain() instead
+# EXIT_RUNTIME=1: honour exit() calls (SIPNET exits on bad input)
+WASM_LDFLAGS=-lm -sMODULARIZE=1 -sEXPORT_ES6=1 -sEXPORT_NAME=createSipnet \
+	-sINVOKE_RUN=0 -sEXIT_RUNTIME=1 -sALLOW_MEMORY_GROWTH=1 \
+	-sENVIRONMENT=web,worker,node -sFORCE_FILESYSTEM=1 \
+	-sEXPORTED_RUNTIME_METHODS=callMain,FS
+WASM_JS=$(WASM_DIR)/sipnet.mjs
+
+wasm: $(WASM_JS)
+
+$(WASM_JS): $(COMMON_CFILES) $(SIPNET_CFILES) $(wildcard src/common/*.h src/sipnet/*.h)
+	@mkdir -p $(WASM_DIR)
+	$(EMCC) $(WASM_CFLAGS) $(COMMON_CFILES) $(SIPNET_CFILES) $(WASM_LDFLAGS) -o $@
+
+wasm-clean:
+	rm -f $(WASM_DIR)/sipnet.mjs $(WASM_DIR)/sipnet.wasm
+
 clean:
 	rm -f $(SIPNET_OFILES) $(COMMON_OFILES)
 	rm -f $(COMMON_LIB) $(SIPNET_LIB)
@@ -106,7 +129,8 @@ $(SIPNET_TEST_DIRS_CLEAN):
 cleanall: clean testclean
 
 .PHONY: all clean help document exec cleanall \
-		test testbuild $(SIPNET_TEST_DIRS) $(SIPNET_TEST_DIRS_RUN) testclean $(SIPNET_TEST_DIRS_CLEAN) testrun smoke unit
+		test testbuild $(SIPNET_TEST_DIRS) $(SIPNET_TEST_DIRS_RUN) testclean $(SIPNET_TEST_DIRS_CLEAN) testrun smoke unit \
+		wasm wasm-clean
 
 help:
 	@echo "Available make targets:"
@@ -118,6 +142,9 @@ help:
 	@echo "  all          - Build sipnet executable and the documentation"
 	@echo "  clean        - Remove compiled files, executables, and documentation"
 	@echo "  depend       - Generate build dependency information for source files and append to Makefile"
+	@echo "  === WebAssembly (requires emcc; see docs/web-assembly.md) ==="
+	@echo "  wasm         - Build web/sipnet.mjs + web/sipnet.wasm with Emscripten"
+	@echo "  wasm-clean   - Remove the WebAssembly build outputs"
 	@echo "  === Tests ==="
 	@echo "  test         - Build + run unit tests, then smoke tests"
 	@echo "  testbuild    - Build the unit tests (does not run)"

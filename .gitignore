@@ -33,3 +33,7 @@ src/sipnet/.vscode/*
 *.bak
 *~
 *.tmp
+
+# WebAssembly build outputs (see docs/web-assembly.md)
+web/sipnet.mjs
+web/sipnet.wasm
