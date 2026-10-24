@@ -114,6 +114,11 @@ wasm-serve: wasm-site
 	@echo "Serving $(WASM_DIR)/ at http://localhost:$(WASM_PORT)/ (Ctrl-C to stop)"
 	python3 -m http.server --directory $(WASM_DIR) $(WASM_PORT)
 
+# Push a build of the web runner to the wasm-site-build branch, from which
+# GitHub Actions publishes it with the docs (see docs/web-assembly.md)
+wasm-publish:
+	./tools/publish_wasm_site.sh
+
 # Run the smoke tests through the wasm build (needs node)
 wasm-smoke: wasm
 	node tests/wasm/run_smoke_wasm.mjs $(WASM_DIR)
@@ -157,7 +162,7 @@ cleanall: clean testclean
 
 .PHONY: all clean help document exec cleanall \
 		test testbuild $(SIPNET_TEST_DIRS) $(SIPNET_TEST_DIRS_RUN) testclean $(SIPNET_TEST_DIRS_CLEAN) testrun smoke unit \
-		wasm wasm-clean wasm-smoke wasm-bench wasm-site wasm-serve
+		wasm wasm-clean wasm-smoke wasm-bench wasm-site wasm-serve wasm-publish
 
 help:
 	@echo "Available make targets:"
@@ -173,6 +178,7 @@ help:
 	@echo "  wasm         - Build web/sipnet.mjs + web/sipnet.wasm with Emscripten"
 	@echo "  wasm-site    - Build wasm and assemble the static web runner in web/"
 	@echo "  wasm-serve   - Build the web runner and serve it at http://localhost:8000/"
+	@echo "  wasm-publish - Push a web runner build for GitHub Pages (tools/publish_wasm_site.sh)"
 	@echo "  wasm-clean   - Remove the WebAssembly build outputs"
 	@echo "  wasm-smoke   - Run the smoke tests against the WebAssembly build (needs node)"
 	@echo "  wasm-bench   - Benchmark native vs. WebAssembly builds (needs node)"
