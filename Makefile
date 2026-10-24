@@ -94,6 +94,25 @@ $(WASM_JS): $(COMMON_CFILES) $(SIPNET_CFILES) $(wildcard src/common/*.h src/sipn
 
 wasm-clean:
 	rm -f $(WASM_DIR)/sipnet.mjs $(WASM_DIR)/sipnet.wasm
+	rm -rf $(WASM_DIR)/examples $(WASM_DIR)/param-info.json $(WASM_DIR)/output-info.json
+
+# Static web runner (web/): wasm build + example inputs + docs metadata
+WASM_EXAMPLES=niwot russell_1 russell_2 russell_3 russell_4
+WASM_PORT ?= 8000
+
+wasm-site: wasm
+	@for ex in $(WASM_EXAMPLES); do \
+		mkdir -p $(WASM_DIR)/examples/$$ex; \
+		for f in sipnet.in sipnet.param sipnet.clim events.in; do \
+			cp tests/smoke/$$ex/$$f $(WASM_DIR)/examples/$$ex/; \
+		done; \
+	done
+	@echo "Copied example inputs to $(WASM_DIR)/examples/"
+	node web/scripts/build-metadata.mjs
+
+wasm-serve: wasm-site
+	@echo "Serving $(WASM_DIR)/ at http://localhost:$(WASM_PORT)/ (Ctrl-C to stop)"
+	python3 -m http.server --directory $(WASM_DIR) $(WASM_PORT)
 
 # Run the smoke tests through the wasm build (needs node)
 wasm-smoke: wasm
@@ -138,7 +157,7 @@ cleanall: clean testclean
 
 .PHONY: all clean help document exec cleanall \
 		test testbuild $(SIPNET_TEST_DIRS) $(SIPNET_TEST_DIRS_RUN) testclean $(SIPNET_TEST_DIRS_CLEAN) testrun smoke unit \
-		wasm wasm-clean wasm-smoke wasm-bench
+		wasm wasm-clean wasm-smoke wasm-bench wasm-site wasm-serve
 
 help:
 	@echo "Available make targets:"
@@ -152,6 +171,8 @@ help:
 	@echo "  depend       - Generate build dependency information for source files and append to Makefile"
 	@echo "  === WebAssembly (requires emcc; see docs/web-assembly.md) ==="
 	@echo "  wasm         - Build web/sipnet.mjs + web/sipnet.wasm with Emscripten"
+	@echo "  wasm-site    - Build wasm and assemble the static web runner in web/"
+	@echo "  wasm-serve   - Build the web runner and serve it at http://localhost:8000/"
 	@echo "  wasm-clean   - Remove the WebAssembly build outputs"
 	@echo "  wasm-smoke   - Run the smoke tests against the WebAssembly build (needs node)"
 	@echo "  wasm-bench   - Benchmark native vs. WebAssembly builds (needs node)"

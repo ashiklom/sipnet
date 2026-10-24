@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SIPNET in the browser</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body class="viz-root">
+  <header class="page-header">
+    <h1>SIPNET in the browser</h1>
+    <p class="subtle">
+      Run the <a href="https://github.com/PecanProject/sipnet">SIPNET</a> ecosystem model, compiled to WebAssembly,
+      entirely in your browser. Runs are saved in this browser's storage.
+      <span id="version"></span>
+    </p>
+    <div id="banner" class="banner" role="alert" hidden></div>
+  </header>
+
+  <main>
+    <section class="card" aria-labelledby="h-inputs">
+      <h2 id="h-inputs"><span class="step">1</span> Inputs</h2>
+      <div class="row">
+        <label>Site
+          <select id="site-select"></select>
+        </label>
+        <span id="site-summary" class="subtle"></span>
+      </div>
+      <p id="site-description" class="subtle"></p>
+      <div id="upload-panel" class="upload" hidden>
+        <p class="subtle">Use your own SIPNET input files. Climate and parameter files are required.</p>
+        <div class="upload-grid">
+          <label>Parameters (<code>.param</code>) <input type="file" id="up-param" required></label>
+          <label>Climate (<code>.clim</code>) <input type="file" id="up-clim" required></label>
+          <label>Events (<code>events.in</code>, optional) <input type="file" id="up-events"></label>
+          <label>Config (<code>sipnet.in</code>, optional; sets model options) <input type="file" id="up-config"></label>
+        </div>
+        <div class="row">
+          <label>Name for these inputs <input type="text" id="up-name" placeholder="My site"></label>
+          <button type="button" id="up-load">Load files</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="h-options">
+      <h2 id="h-options"><span class="step">2</span> Model options</h2>
+      <div id="flags" class="flags"></div>
+      <ul id="flag-errors" class="errors"></ul>
+    </section>
+
+    <section class="card" aria-labelledby="h-params">
+      <h2 id="h-params"><span class="step">3</span> Parameters</h2>
+      <div class="row">
+        <input type="search" id="param-filter" placeholder="Filter by name or description" aria-label="Filter parameters">
+        <label class="inline"><input type="checkbox" id="changed-only"> Changed only</label>
+        <button type="button" id="reset-params">Reset to site values</button>
+        <span id="param-summary" class="subtle"></span>
+      </div>
+      <div class="table-wrap params-wrap">
+        <table id="param-table" class="data">
+          <thead>
+            <tr><th>Parameter</th><th>Description</th><th>Units</th><th class="num">Site value</th><th class="num">Value</th><th class="num">Change</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <details class="events">
+        <summary>Events (<code>events.in</code>) <span id="events-summary" class="subtle"></span></summary>
+        <p class="subtle">One event per line: <code>year day type params…</code>. See the SIPNET docs on model inputs.</p>
+        <textarea id="events-text" rows="10" spellcheck="false" aria-label="events.in contents"></textarea>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="h-run">
+      <h2 id="h-run"><span class="step">4</span> Run</h2>
+      <div class="row">
+        <label>Run name <input type="text" id="run-name" size="28"></label>
+        <button type="button" id="run-btn" class="primary">Run SIPNET</button>
+        <span id="run-status" role="status"></span>
+      </div>
+      <details id="log-wrap">
+        <summary>SIPNET log</summary>
+        <pre id="run-log"></pre>
+      </details>
+    </section>
+
+    <section class="card" aria-labelledby="h-runs">
+      <h2 id="h-runs">Saved runs</h2>
+      <div class="row">
+        <span class="subtle">Tick up to 8 runs to compare them below.</span>
+        <span id="storage-info" class="subtle"></span>
+        <span class="spacer"></span>
+        <button type="button" id="delete-all" class="danger">Delete all runs</button>
+      </div>
+      <div class="table-wrap">
+        <table id="runs-table" class="data">
+          <thead>
+            <tr><th>Compare</th><th>Name</th><th>Site</th><th>Created</th><th>Changes from site inputs</th><th class="num">Run time</th><th>Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p id="runs-empty" class="subtle">No saved runs yet. Configure inputs above and press <em>Run SIPNET</em>.</p>
+    </section>
+
+    <section class="card" aria-labelledby="h-compare" id="compare">
+      <h2 id="h-compare">Compare runs</h2>
+      <div class="row filters">
+        <label>Variable <select id="cmp-var"></select></label>
+        <label>Aggregate
+          <select id="cmp-period">
+            <option value="none">None (every time step)</option>
+            <option value="day">Daily</option>
+            <option value="month">Monthly</option>
+            <option value="year">Yearly</option>
+          </select>
+        </label>
+        <label>Statistic
+          <select id="cmp-stat">
+            <option value="mean">Mean</option>
+            <option value="sum">Sum</option>
+          </select>
+        </label>
+        <label>Show
+          <select id="cmp-mode">
+            <option value="values">Values</option>
+            <option value="diff">Difference from first selected run</option>
+          </select>
+        </label>
+      </div>
+      <p id="cmp-var-desc" class="subtle"></p>
+      <div id="chart"></div>
+      <h3>Summary of plotted series</h3>
+      <div class="table-wrap">
+        <table id="stats-table" class="data"><thead></thead><tbody></tbody></table>
+      </div>
+      <h3>Input differences between selected runs</h3>
+      <div class="table-wrap diff-wrap">
+        <table id="diff-table" class="data"><thead></thead><tbody></tbody></table>
+      </div>
+      <p id="diff-empty" class="subtle" hidden>The selected runs have identical inputs.</p>
+    </section>
+  </main>
+</body>
+</html>

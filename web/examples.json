@@ -1,0 +1,27 @@
+[
+  {
+    "id": "niwot",
+    "name": "Niwot Ridge (default model)",
+    "description": "Subalpine forest, 1998–2005, two climate steps per day, out-of-the-box SIPNET options. From the niwot smoke test."
+  },
+  {
+    "id": "russell_1",
+    "name": "Russell Ranch 1 (events)",
+    "description": "Agricultural site near Russell Ranch, CA, 2016–2017, 3-hourly climate, with irrigation, planting, harvest and tillage events. From the russell_1 smoke test."
+  },
+  {
+    "id": "russell_2",
+    "name": "Russell Ranch 2 (nitrogen cycle)",
+    "description": "As Russell Ranch 1, with the nitrogen cycle and litter pool enabled, plus fertilization events. From the russell_2 smoke test."
+  },
+  {
+    "id": "russell_3",
+    "name": "Russell Ranch 3 (growth resp., leaf water)",
+    "description": "As Russell Ranch 1, with growth respiration, leaf water and litter pool on and water-limited heterotrophic respiration off. From the russell_3 smoke test."
+  },
+  {
+    "id": "russell_4",
+    "name": "Russell Ranch 4 (microbes)",
+    "description": "As Russell Ranch 1, with microbes and soil-temperature phenology on; snow, GDD phenology and events off. From the russell_4 smoke test."
+  }
+]
