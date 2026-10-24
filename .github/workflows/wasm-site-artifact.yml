@@ -1,0 +1,29 @@
+name: WASM site artifact
+
+# Runs when tools/publish_wasm_site.sh pushes a new build of the web runner to
+# the wasm-site-build branch. It only sanity-checks the artifact; on success,
+# the "Publish Docs" workflow (triggered via workflow_run, so it runs in the
+# default branch context that GitHub Pages deployments require) deploys the
+# docs with the web runner under app/.
+
+on:
+  push:
+    branches: [ wasm-site-build ]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check-artifact
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout artifact
+        uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          for f in index.html js/app.js js/worker.js sipnet.mjs sipnet.wasm examples.json; do
+            test -s "$f" || { echo "missing $f"; exit 1; }
+          done
+          cat BUILD_INFO.txt

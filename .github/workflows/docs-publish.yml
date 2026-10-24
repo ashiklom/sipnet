@@ -3,6 +3,11 @@ name: Publish Docs
 on:
   push:
     branches: [ master ]
+  # A new build of the WASM web runner was pushed (tools/publish_wasm_site.sh)
+  workflow_run:
+    workflows: [ "WASM site artifact" ]
+    types: [ completed ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,6 +22,7 @@ jobs:
   build:
     name: docs-build
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +38,17 @@ jobs:
         run: |
           make clean document
           touch site/.nojekyll
+
+      # The web runner is built and pushed separately (see docs/web-assembly.md)
+      - name: Add WASM web runner from the wasm-site-build branch
+        run: |
+          if git fetch --depth 1 origin wasm-site-build; then
+            mkdir -p site/app
+            git archive FETCH_HEAD | tar -x -C site/app
+            cat site/app/BUILD_INFO.txt
+          else
+            echo "No wasm-site-build branch; publishing docs without the web runner"
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -34,6 +34,7 @@ sections to include in release notes:
 - Soil mineral pool (#170)
 - Nitrogen effects of fertilization (#173)
 - `logAppend` logging function (#173)
+- WebAssembly build (`make wasm`), WASM smoke tests and native-vs-WASM benchmark, and a static web runner for running and comparing SIPNET simulations in the browser (`make wasm-serve`); see `docs/web-assembly.md`
 
 ### Fixed
 
